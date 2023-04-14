@@ -50,6 +50,8 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: test
+      - name: Setup VSTest.exe
+        uses: Malcolmnixon/Setup-VSTest@v4
+      - name: RunTests
         working-directory: ${{env.GITHUB.WORKSPACE}}
-        run: echo TEST
+        run: VSTest.Console.exe  Debug\UnitTest1.dll
