@@ -2,9 +2,9 @@ name: Push
 
 on:
   push:
-    branches: [main]
-  # pull_request:
-  #   branches: [main]
+    branches: [master]
+  #pull_request:
+  #  branches: [ master ]
 
 env:
   # Path to the solution file relative to the root of the project.
@@ -16,7 +16,7 @@ env:
   BUILD_CONFIGURATION: Release
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -25,7 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Add push to PATH
+      - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v1.0.2
 
       - name: Restore NuGet packages
@@ -34,36 +34,78 @@ jobs:
 
       - name: Build
         working-directory: ${{env.GITHUB_WORKSPACE}}
-        # Add additional options to the msbuild command line here (like platform or verbosity level).
+        # Add additional options to the MSBuild command line here (like platform or verbosity level).
         # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
         run: msbuild /m /p:Configuration=${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_FILE_PATH}}
+
       - name: UploadBinaries
         uses: actions/upload-artifact@v3
         with:
           name: my-artifact
           path: x64\Release\ # or path/to/artifact
-          if-no-files-found: error # warn or ignore are also available , default to 'warn'
+          if-no-files-found: error # 'warn' or 'ignore' are also available, defaults to `warn`
+
   lint:
     runs-on: windows-latest
 
     steps:
+      - uses: actions/checkout@v3
+
       - name: RunLint
-        working-directory: ${{env.GITHUB.WORKSPACE}}
-        run: echo LINT
+        working-directory: ${{env.GITHUB_WORKSPACE}}
+        run: echo LINTING
+
   test:
-    if: ${{ always() }}
     needs: [build, lint]
     runs-on: windows-latest
 
     steps:
-      - name: UploadBinaries
-        uses: actions/upload-artifact@v3
-        with:
-          name: my-artifact
-          path: x64\Release\ # or path/to/artifact
-          if-no-files-found: error # warn or ignore are also available , default to 'warn'
       - name: Setup VSTest.exe
         uses: Malcolmnixon/Setup-VSTest@v4
+
+      - name: DownloadBinaries
+        uses: actions/download-artifact@v3
+        with:
+          name: my-artifact
+          path: x64\Release
+
       - name: RunTests
-        working-directory: ${{env.GITHUB.WORKSPACE}}
-        run: VSTest.Console.exe  Debug\UnitTest1.dll
+        working-directory: ${{env.GITHUB_WORKSPACE}}
+        run: VSTest.Console.exe  x64\Release\UnitTest1.dll
+
+  SaveBinary:
+    needs: [test]
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: DownloadBinaries
+        uses: actions/download-artifact@v3
+        with:
+          name: my-artifact
+          path: x64\Release
+
+      - name: stage
+        working-directory: ${{env.GITHUB_WORKSPACE}}
+        run: copy  x64\Release\PipeplinesExe.exe .
+
+      - name: addEmail
+        working-directory: ${{env.GITHUB_WORKSPACE}}
+        run: git config --global user.email "olekaspt@mail.uc.edu"
+
+      - name: addName
+        working-directory: ${{env.GITHUB_WORKSPACE}}
+        run: git config --global user.name "Patrick Olelas"
+
+      - name: add
+        working-directory: ${{env.GITHUB_WORKSPACE}}
+        run: git add PipeplinesExe.exe
+
+      - name: commit
+        working-directory: ${{env.GITHUB_WORKSPACE}}
+        run: git commit -m "generated"
+
+      - name: push
+        working-directory: ${{env.GITHUB_WORKSPACE}}
+        run: git push
