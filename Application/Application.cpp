@@ -4,12 +4,11 @@
 #include "framework.h"
 #include "Application.h"
 
-
 CoolClass::CoolClass(void)
 {
 }
-
-int CoolClass::Calc(int a, int b)
+// Injecting the compile error by change int b to Foo b, This modification will cause a compilation error because the Foo type is undefined,
+int CoolClass::Calc(int a, Foo b)
 {
     if (a == b)
     {
@@ -19,5 +18,4 @@ int CoolClass::Calc(int a, int b)
     {
         return a + b;
     }
-    
 }
