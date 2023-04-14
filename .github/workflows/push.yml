@@ -37,3 +37,19 @@ jobs:
         # Add additional options to the push command line here (like platform or verbosity level).
         # See https://docs.microsoft.com/visualstudio/push/push-command-line-reference
         run: push /m /p:Configuration=${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_FILE_PATH}}
+  lint:
+    runs-on: windows-latest
+
+    steps:
+      - name: RunLint
+        working-directory: ${{env.GITHUB.WORKSPACE}}
+        run: echo LINT
+  test:
+    if: $ {{ always() }}
+    needs: [build, lint]
+    runs-on: windows-latest
+
+    steps:
+      - name: test
+        working-directory: ${{env.GITHUB.WORKSPACE}}
+        run: echo TEST
