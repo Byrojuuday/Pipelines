@@ -45,7 +45,7 @@ jobs:
         working-directory: ${{env.GITHUB.WORKSPACE}}
         run: echo LINT
   test:
-    if: $ {{ always() }}
+    if: ${{ always() }}
     needs: [build, lint]
     runs-on: windows-latest
 
