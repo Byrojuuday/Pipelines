@@ -3,6 +3,7 @@
 
 #include "framework.h"
 #include "Application.h"
+#include <iostream>
 
 CoolClass::CoolClass(void)
 {
